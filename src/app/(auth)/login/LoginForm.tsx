@@ -18,12 +18,15 @@ import { useToast } from "@/hooks/use-toast"
 import authApiRequest from "@/apiRequest/auth"
 import { useRouter } from "next/navigation"
 import { ClientSessionToken } from "@/lib/http"
+import { handleErrorApi } from "@/lib/utils"
+import { useState } from "react"
 
 
 
 
 
 export default function LoginForm() {
+  const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -38,6 +41,8 @@ export default function LoginForm() {
     
    
     async function onSubmit(values: LoginBodyType) {
+      if(loading) return
+      setLoading(true)
       try {
         const result = await authApiRequest.login(values)
         toast({
@@ -49,25 +54,13 @@ export default function LoginForm() {
         ClientSessionToken.value = result.payload.data.token;
         router.replace('/me')
          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        const errors = error.payload?.errors as { field: string, message: string }[];
-        const status = error.status as number;
-        
-        if (status === 422 && errors?.length) {
-          errors.forEach((error) => {
-            form.setError(error.field as ('email' | 'password'), {
-              type: 'server',
-              message: error.message
-            });
-          });
-        } else {
-          // Log other types of errors
-          toast({
-            title: "Error",
-            description: error.payload.message,
-            variant: "destructive"
-          })        
-        }
+      } catch (error: any) {  
+        handleErrorApi({
+          error,
+          setError: form.setError
+        })
+      }finally{
+        setLoading(false)
       }
     }
     

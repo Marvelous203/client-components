@@ -4,16 +4,36 @@ import { LoginResType } from "@/schemaValidations/auth.schema";
 type CustomOptions = RequestInit & {
     baseUrl?: string | undefined
 }
+const ENTITY_ERROR_STATUS = 422
 
-class HttpError extends Error {
+type EntityErrorPayload = {
+    message: string
+    errors: {
+        field : string,
+        message: string
+    }[]
+}
+
+ export class HttpError extends Error {
     status: number;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payload: any;
+    payload: {message: string
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any;
+    };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor({status, payload}: {status: number, payload:any}){
         super('HttpError')
         this.status = status
         this.payload = payload
+    }
+}
+export class EntityError extends HttpError {
+    status: 422;
+    payload: EntityErrorPayload
+    constructor({status,payload}: {status: 422, payload:EntityErrorPayload}){
+        super({status,payload})
+        this.status=status
+        this.payload=payload
     }
 }
     class SessionToken{
@@ -58,7 +78,15 @@ const request = async<Response> (method: 'GET' | 'POST' | 'PUT'| 'DELETE', url: 
         payload,
     }
     if(!res.ok){
-        throw new HttpError(data)
+        if(res.status === ENTITY_ERROR_STATUS){
+            throw new EntityError(data as {
+                status: 422
+                payload : EntityErrorPayload
+            })
+        }else{
+            throw new HttpError(data)
+        }
+
     }
     if(['/auth/login','/auth/register'].includes(url)){
         ClientSessionToken.value = (payload as LoginResType).data.token

@@ -18,12 +18,16 @@ import authApiRequest from "@/apiRequest/auth"
 import { toast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { ClientSessionToken } from "@/lib/http"
+import { handleErrorApi } from "@/lib/utils"
+import { useState } from "react"
 
 
 
 
 
 export default function RegisterForm() {
+  const [loading, setLoading] = useState(false)
+
 
   const router = useRouter()
 
@@ -40,6 +44,8 @@ export default function RegisterForm() {
    
     // 2. Define a submit handler.
     async function onSubmit(values: RegisterBodyType) {
+      if(loading) return
+      setLoading(true)
       try {
         const result = await authApiRequest.register(values)
         toast({
@@ -52,24 +58,12 @@ export default function RegisterForm() {
         router.replace('/me')
          // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
-        const errors = error.payload?.errors as { field: string, message: string }[];
-        const status = error.status as number;
-        
-        if (status === 422 && errors?.length) {
-          errors.forEach((error) => {
-            form.setError(error.field as ('email' | 'password'), {
-              type: 'server',
-              message: error.message
-            });
-          });
-        } else {
-          // Log other types of errors
-          toast({
-            title: "Error",
-            description: error.payload.message,
-            variant: "destructive"
-          })        
-        }
+        handleErrorApi({
+          error,
+          setError: form.setError
+        })
+      }finally{
+        setLoading(false)
       }
     }
   return (

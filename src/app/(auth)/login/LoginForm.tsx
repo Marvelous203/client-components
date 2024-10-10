@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema"
-import envConfig from "@/config"
 import { useToast } from "@/hooks/use-toast"
 import { useAppContext } from "@/app/AppProvider"
+import authApiRequest from "@/apiRequest/auth"
+import { useRouter } from "next/navigation"
 
 
 
@@ -25,6 +26,7 @@ import { useAppContext } from "@/app/AppProvider"
 export default function LoginForm() {
   const { toast } = useToast()
   const {setSessionToken} = useAppContext()
+  const router = useRouter()
 
     // 1. Define your form.
     const form = useForm<LoginBodyType>({
@@ -38,45 +40,15 @@ export default function LoginForm() {
    
     async function onSubmit(values: LoginBodyType) {
       try {
-        const result = await fetch(`${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`, {
-          body: JSON.stringify(values),
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          method: 'POST'
-        }).then(async (response) => {
-          const payload = await response.json();
-          const data = {
-            status: response.status,
-            payload
-          };
-          if (!response.ok) {
-            throw data;
-          }
-          return data;
-        })
+        const result = await authApiRequest.login(values)
         toast({
           title: "Login successful",
           description: result.payload.message,
         })    
-        const resultFromNext = await fetch('api/auth',{
-          method: 'POST',
-          body: JSON.stringify(result),
-          headers: {
-            'Content-Type': 'application/json'
-          },
-        }).then(async (response) => {
-          const payload = await response.json();
-          const data = {
-            status: response.status,
-            payload
-          };
-          if (!response.ok) {
-            throw data;
-          }
-          return data;
-        })
-        setSessionToken (resultFromNext.payload.data.token);
+        await authApiRequest.auth({sessionToken: result.payload.data.token})
+          
+        setSessionToken (result.payload.data.token);
+        router.replace('/me')
          // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         const errors = error.payload?.errors as { field: string, message: string }[];

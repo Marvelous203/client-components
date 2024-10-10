@@ -1,6 +1,8 @@
 export async function POST(request: Request) {
   const res = await request.json();
-  const sessionToken = res.payload?.data?.token;
+  // const sessionToken = res.payload?.data?.token; vi account api tra ve object 
+  const sessionToken = res.sessionToken as string;
+
   if (!sessionToken) {
     return Response.json(
       { message: "Invalid session token" },
@@ -10,7 +12,8 @@ export async function POST(request: Request) {
     );
   }
   return Response.json(
-    res.payload, //tra ve json server nextjs
+    // res.payload, //tra ve json server nextjs
+    res,
     {
       status: 200,
       headers: {

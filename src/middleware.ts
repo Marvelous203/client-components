@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
   if(privatePaths.some(path => pathname.startsWith(path)) && !sessionToken){
     return NextResponse.redirect(new URL('/login',request.url))
   }
-  if(authPaths.some(path => path.startsWith(path) && sessionToken)){
+  if(authPaths.some(path => pathname.startsWith(path) && sessionToken)){
     return NextResponse.redirect(new URL('/me',request.url))
   }
   // return NextResponse.redirect(new URL('/home', request.url))

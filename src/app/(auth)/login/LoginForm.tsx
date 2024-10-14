@@ -52,7 +52,8 @@ export default function LoginForm() {
         await authApiRequest.auth({sessionToken: result.payload.data.token})
           
         ClientSessionToken.value = result.payload.data.token;
-        router.replace('/me')
+        router.push('/')
+        router.refresh()
          // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {  
         handleErrorApi({

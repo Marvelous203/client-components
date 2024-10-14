@@ -9,10 +9,13 @@ export default async function MyProfile() {
     const result = await accountApiRequest.me(sessionToken?.value ?? '')
   return (
     <div>
-        <h1>Profile</h1>
+      <div className="flex flex-col items-center gap-3">
+      <h1>Profile</h1>
         <div>
-            Xin Chào {result.payload.data?.name}
+            Xin Chào <strong>{result.payload.data?.name}</strong>
         </div>
+      </div>
+
 
     </div>
   )

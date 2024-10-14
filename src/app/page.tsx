@@ -29,7 +29,11 @@ export default function Home() {
     //   </button> */}
     // </main>
     <main>
-      Home
+      <div className="flex justify-center">
+
+      <strong>Home</strong>
+
+      </div>
     </main>
   ); // giữ nguyên page server component
 }

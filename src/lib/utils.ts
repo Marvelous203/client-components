@@ -30,3 +30,7 @@ export const handleErrorApi = ({error , setError, duration}:{
     })
   }
 }
+//Xoa ki tu dau tien cua path url
+export const normalizePath = (path: string)=>{
+  return path.startsWith('/') ? path.slice(1) : path
+}

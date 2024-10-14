@@ -1,5 +1,6 @@
 import envConfig from "@/config";
 import { LoginResType } from "@/schemaValidations/auth.schema";
+import { normalizePath } from "./utils";
 
 type CustomOptions = RequestInit & {
     baseUrl?: string | undefined
@@ -51,8 +52,13 @@ export class EntityError extends HttpError {
     export const ClientSessionToken = new SessionToken()
 
 const request = async<Response> (method: 'GET' | 'POST' | 'PUT'| 'DELETE', url: string, option?: CustomOptions | undefined) => {
-    const body = option?.body ? JSON.stringify(option?.body) : undefined
-    const baseHeaders = {
+    const body = option?.body ?
+    (option?.body instanceof FormData ? option?.body 
+    :JSON.stringify(option?.body)) 
+    : undefined
+    const baseHeaders = body instanceof FormData ? {
+        'Authorization': ClientSessionToken.value ? `Bearer ${ClientSessionToken.value}` : ''
+    }:{
         'Content-Type': 'application/json',
         'Authorization': ClientSessionToken.value ? `Bearer ${ClientSessionToken.value}` : ''
     }
@@ -68,7 +74,8 @@ const request = async<Response> (method: 'GET' | 'POST' | 'PUT'| 'DELETE', url: 
         headers: {
             ...baseHeaders,
             ...option?.headers
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
         body,
         method
     })
@@ -88,11 +95,14 @@ const request = async<Response> (method: 'GET' | 'POST' | 'PUT'| 'DELETE', url: 
         }
 
     }
-    if(['/auth/login','/auth/register'].includes(url)){
+    //Logic chi chay phia client
+    if(typeof window !== undefined){
+    if(['auth/login','auth/register'].some(item => item === normalizePath(url))){
         ClientSessionToken.value = (payload as LoginResType).data.token
-    }else if('/auth/logout'.includes(url)){
+    }else if('auth/logout' === normalizePath(url)){
         ClientSessionToken.value = ''
     }
+}
     return data
 }
 const http ={
